@@ -138,6 +138,7 @@ async function signup(username, password) {
 
 function logout() {
   state.destroyState();
+  window.location.href = "index.html"; // Added a redirect to home page after logout
   return {success: true};
 }
 
