@@ -1,4 +1,7 @@
 {
   "liveServer.settings.root": "front-end/",
-  "python.defaultInterpreterPath": "backend/.venv/bin/python"
+  "python.defaultInterpreterPath": "backend/.venv/bin/python",
+  "cSpell.words": [
+    "followee"
+  ]
 }

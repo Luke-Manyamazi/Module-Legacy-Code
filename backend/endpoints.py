@@ -1,12 +1,13 @@
 from typing import Dict, Union
 from data import blooms
-from data.follows import follow, get_followed_usernames, get_inverse_followed_usernames
+from data.follows import follow, unfollow, get_followed_usernames, get_inverse_followed_usernames
 from data.users import (
     UserRegistrationError,
     get_suggested_follows,
     get_user,
     register_user,
 )
+
 
 from flask import Response, jsonify, make_response, request
 from flask_jwt_extended import (
@@ -149,6 +150,30 @@ def do_follow():
         }
     )
 
+
+@jwt_required()
+def do_unfollow(username):
+    current_user = get_current_user()  # Add this line
+    unfollow_user = get_user(username)
+    if unfollow_user is None:
+        return make_response(
+            jsonify({"success": False, "message": f"User {username} not found"}), 404
+        )
+
+    # Check if actually following
+    followers = get_inverse_followed_usernames(unfollow_user)
+    if current_user.username not in followers:
+        return make_response(
+            jsonify({"success": False, "message": f"You are not following {username}"}), 400
+        )
+
+    # Use the imported unfollow function instead of raw SQL
+    unfollow(current_user, unfollow_user)
+    
+    return jsonify({
+        "success": True,
+        "message": f"Successfully unfollowed {username}"
+    })
 
 @jwt_required()
 def send_bloom():

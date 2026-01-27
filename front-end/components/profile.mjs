@@ -14,12 +14,11 @@ function createProfile(template, {profileData, whoToFollow, isLoggedIn}) {
 
   const usernameEl = profileElement.querySelector("[data-username]");
   const bloomCountEl = profileElement.querySelector("[data-bloom-count]");
-  const followingCountEl = profileElement.querySelector(
-    "[data-following-count]"
-  );
+  const followingCountEl = profileElement.querySelector("[data-following-count]");
   const followerCountEl = profileElement.querySelector("[data-follower-count]");
   const followButtonEl = profileElement.querySelector("[data-action='follow']");
   const whoToFollowContainer = profileElement.querySelector(".profile__who-to-follow");
+  
   // Populate with data
   usernameEl.querySelector("h2").textContent = profileData.username || "";
   usernameEl.setAttribute("href", `/profile/${profileData.username}`);
@@ -27,8 +26,19 @@ function createProfile(template, {profileData, whoToFollow, isLoggedIn}) {
   followerCountEl.textContent = profileData.followers?.length || 0;
   followingCountEl.textContent = profileData.follows?.length || 0;
   followButtonEl.setAttribute("data-username", profileData.username || "");
-  followButtonEl.hidden = profileData.is_self || profileData.is_following;
+  
+  // Only hide for own profile, not when following
+  followButtonEl.hidden = profileData.is_self;
+  
+  // Set button text based on follow status
+  if (profileData.is_following) {
+    followButtonEl.textContent = "Unfollow";
+  } else {
+    followButtonEl.textContent = "Follow";
+  }
+  
   followButtonEl.addEventListener("click", handleFollow);
+  
   if (!isLoggedIn) {
     followButtonEl.style.display = "none";
   }
@@ -62,8 +72,55 @@ async function handleFollow(event) {
   const username = button.getAttribute("data-username");
   if (!username) return;
 
-  await apiService.followUser(username);
-  await apiService.getWhoToFollow();
+  try {
+    // Check if this is a follow or unfollow action
+    if (button.textContent === "Unfollow") {
+      // Ask for confirmation
+      if (!confirm(`Are you sure you want to unfollow ${username}?`)) {
+        return;
+      }
+      
+      // Call unfollow API
+      await apiService.unfollowUser(username);
+      // Update button text
+      button.textContent = "Follow";
+      
+      // Update follower count immediately (optional)
+      const profileElement = button.closest('.profile');
+      if (profileElement) {
+        const followerCountEl = profileElement.querySelector('[data-follower-count]');
+        if (followerCountEl) {
+          const currentCount = parseInt(followerCountEl.textContent) || 0;
+          followerCountEl.textContent = Math.max(0, currentCount - 1);
+        }
+      }
+    } else {
+      // Call follow API
+      await apiService.followUser(username);
+      // Update button text
+      button.textContent = "Unfollow";
+      
+      // Update follower count immediately (optional)
+      const profileElement = button.closest('.profile');
+      if (profileElement) {
+        const followerCountEl = profileElement.querySelector('[data-follower-count]');
+        if (followerCountEl) {
+          const currentCount = parseInt(followerCountEl.textContent) || 0;
+          followerCountEl.textContent = currentCount + 1;
+        }
+      }
+    }
+    
+    // FIX: Only refresh who-to-follow, don't refresh everything
+    // This should NOT clear the blooms
+    if (state.isLoggedIn) {
+      await apiService.getWhoToFollow();
+    }
+    
+  } catch (error) {
+    console.error("Failed to follow/unfollow:", error);
+    // Error is already handled by your apiService
+  }
 }
 
 export {createProfile, handleFollow};
