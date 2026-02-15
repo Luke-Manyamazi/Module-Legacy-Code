@@ -1,4 +1,4 @@
-import {renderEach, renderOne, destroy} from "../lib/render.mjs";
+import { renderEach, renderOne, destroy } from "../lib/render.mjs";
 import {
   state,
   getLogoutContainer,
@@ -7,66 +7,67 @@ import {
   getTimelineContainer,
   getBloomFormContainer,
 } from "../index.mjs";
-import {createLogin, handleLogin} from "../components/login.mjs";
-import {createLogout, handleLogout} from "../components/logout.mjs";
-import {createProfile} from "../components/profile.mjs";
+import { createLogin, handleLogin } from "../components/login.mjs";
+import { createLogout, handleLogout } from "../components/logout.mjs";
+import { createProfile } from "../components/profile.mjs";
 import {
   createBloomForm,
   handleBloomSubmit,
   handleTyping,
 } from "../components/bloom-form.mjs";
-import {createBloom} from "../components/bloom.mjs";
+import { createBloom } from "../components/bloom.mjs";
 
-// Home view - logged in or not
 function homeView() {
   destroy();
 
   if (state.isLoggedIn) {
     renderOne(
       {
-        profileData: state.profiles.find((p) => p.username === state.currentUser),
+        profileData: state.profiles.find(
+          (p) => p.username === state.currentUser,
+        ),
         whoToFollow: state.whoToFollow,
         isLoggedIn: state.isLoggedIn,
       },
       getProfileContainer(),
       "profile-template",
-      createProfile
+      createProfile,
     );
+
     renderEach(
       state.timelineBlooms,
       getTimelineContainer(),
       "bloom-template",
-      createBloom
+      createBloom,
     );
+
     renderOne(
       state.isLoggedIn,
       getBloomFormContainer(),
       "bloom-form-template",
-      createBloomForm
+      createBloomForm,
     );
+
     renderOne(
       state.isLoggedIn,
       getLogoutContainer(),
       "logout-template",
-      createLogout
+      createLogout,
     );
     document
       .querySelector("[data-action='logout']")
       ?.addEventListener("click", handleLogout);
+
     document
       .querySelector("[data-form='bloom']")
       ?.addEventListener("submit", handleBloomSubmit);
     document.querySelector("textarea")?.addEventListener("input", handleTyping);
   } else {
-    renderOne(
-      state.isLoggedIn,
-      getLoginContainer(),
-      "login-template",
-      createLogin
-    );
+    renderOne(false, getLoginContainer(), "login-template", createLogin);
     document
       .querySelector("[data-form='login']")
       ?.addEventListener("submit", handleLogin);
   }
 }
-export {homeView};
+
+export { homeView };
