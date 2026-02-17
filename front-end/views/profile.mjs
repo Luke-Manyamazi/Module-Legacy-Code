@@ -7,56 +7,65 @@ import {
   getProfileContainer,
   getTimelineContainer,
 } from "../index.mjs";
-import { createLogin, handleLogin } from "../components/login.mjs";
-import { createLogout, handleLogout } from "../components/logout.mjs";
+import { createLogin } from "../components/login.mjs";
+import { createLogout } from "../components/logout.mjs";
 import { createProfile } from "../components/profile.mjs";
 import { createBloom } from "../components/bloom.mjs";
 
 function profileView(username) {
+  // Clear previous view
   destroy();
 
-  const existingProfile = state.profiles.find((p) => p.username === username);
+  // Check if profile already exists in state
+  const existingProfile = state.profiles.find(
+    (p) => p.username === username
+  );
 
+  // Fetch profile if missing or incomplete
   if (!existingProfile || !existingProfile.recent_blooms) {
     apiService.getProfile(username);
   }
 
-  if (state.isLoggedIn) {
+  // Render logout button if logged in
+  renderOne(
+    state.isLoggedIn,
+    getLogoutContainer(),
+    "logout-template",
+    createLogout
+  );
+
+  // Render login form if logged out
+  renderOne(
+    state.isLoggedIn,
+    getLoginContainer(),
+    "login-template",
+    createLogin
+  );
+
+  // Get profile data from state
+  const profileData = state.profiles.find(
+    (p) => p.username === username
+  );
+
+  // Render profile and blooms if data exists
+  if (profileData) {
     renderOne(
-      state.isLoggedIn,
-      getLogoutContainer(),
-      "logout-template",
-      createLogout,
+      {
+        profileData,
+        whoToFollow: state.isLoggedIn ? state.whoToFollow : [],
+        isLoggedIn: state.isLoggedIn,
+      },
+      getProfileContainer(),
+      "profile-template",
+      createProfile
     );
-    document
-      .querySelector("[data-action='logout']")
-      ?.addEventListener("click", handleLogout);
 
-    const profileData = state.profiles.find((p) => p.username === username);
-    if (profileData) {
-      renderOne(
-        {
-          profileData,
-          whoToFollow: state.whoToFollow,
-          isLoggedIn: state.isLoggedIn,
-        },
-        getProfileContainer(),
-        "profile-template",
-        createProfile,
-      );
-
-      renderEach(
-        profileData.recent_blooms || [],
-        getTimelineContainer(),
-        "bloom-template",
-        createBloom,
-      );
-    }
-  } else {
-    renderOne(false, getLoginContainer(), "login-template", createLogin);
-    document
-      .querySelector("[data-action='login']")
-      ?.addEventListener("click", handleLogin);
+    renderEach(
+      profileData.recent_blooms || [],
+      getTimelineContainer(),
+      "bloom-template",
+      createBloom
+    );
   }
 }
 

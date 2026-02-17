@@ -1,4 +1,4 @@
-import {apiService} from "../index.mjs";
+import { apiService } from "../index.mjs";
 
 /**
  * Create a logout component
@@ -8,17 +8,25 @@ import {apiService} from "../index.mjs";
  */
 function createLogout(template, isLoggedIn) {
   if (!isLoggedIn) return;
-  const logout = document.getElementById(template).content.cloneNode(true);
+
+  const logout = document
+    .getElementById(template)
+    .content.cloneNode(true);
 
   return logout;
 }
 
 async function handleLogout(event) {
+  event.preventDefault(); // prevent unintended navigation
+
   try {
     apiService.logout();
+
+    // trigger UI refresh
+    window.dispatchEvent(new Event("state-change"));
   } catch (error) {
     throw error;
   }
 }
 
-export {createLogout, handleLogout};
+export { createLogout, handleLogout };

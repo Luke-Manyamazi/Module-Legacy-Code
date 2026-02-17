@@ -1,4 +1,4 @@
-import {apiService} from "../index.mjs";
+import { apiService } from "../index.mjs";
 
 /**
  * Create a login component
@@ -8,15 +8,18 @@ import {apiService} from "../index.mjs";
  */
 function createLogin(template, isLoggedIn) {
   if (isLoggedIn) return;
+
   const loginElement = document
     .getElementById(template)
     .content.cloneNode(true);
 
   return loginElement;
 }
+
 // HANDLER
 async function handleLogin(event) {
   event.preventDefault();
+
   const form = event.target;
   const submitButton = form.querySelector("[data-submit]");
   const originalText = submitButton.textContent;
@@ -29,14 +32,19 @@ async function handleLogin(event) {
     const username = formData.get("username");
     const password = formData.get("password");
 
+    // Perform login
     await apiService.login(username, password);
+
+    // Trigger app re-render after login
+    window.dispatchEvent(new Event("state-change"));
+
   } catch (error) {
     throw error;
   } finally {
-    // Always reset UI state regardless of success/failure
+    // Always reset UI state
     submitButton.textContent = originalText;
     form.inert = false;
   }
 }
 
-export {createLogin, handleLogin};
+export { createLogin, handleLogin };

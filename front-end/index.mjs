@@ -1,7 +1,11 @@
-import {state} from "./lib/state.mjs";
-import {handleRouteChange} from "./lib/router.mjs";
-import {apiService} from "./lib/api.mjs";
-import {handleErrorDialog} from "./components/error.mjs";
+import { state } from "./lib/state.mjs";
+import { handleRouteChange } from "./lib/router.mjs";
+import { apiService } from "./lib/api.mjs";
+import { handleErrorDialog } from "./components/error.mjs";
+
+// ✅ NEW: import auth handlers
+import { handleLogin } from "./components/login.mjs";
+import { handleLogout } from "./components/logout.mjs";
 
 // get all the dynamic areas of the initial DOM
 const getLogoutContainer = () => document.getElementById("logout-container");
@@ -20,6 +24,7 @@ const getHeadingContainer = () => document.getElementById("heading-container");
  * - Check for token and restore session if exists
  * - Handle the current route based on URL
  * - Set up state change listeners
+ * - Set up global auth event delegation
  */
 async function init() {
   const path = window.location.pathname;
@@ -29,7 +34,7 @@ async function init() {
   // Attempt to restore session if token exists
   if (state.token || localStorage.getItem("token")) {
     if (localStorage.getItem("token") && !state.token) {
-      state.updateState({token: localStorage.getItem("token")});
+      state.updateState({ token: localStorage.getItem("token") });
     }
     await apiService.getProfile();
 
@@ -37,6 +42,20 @@ async function init() {
       await apiService.getProfile(profileUsername);
     }
   }
+
+  // Handle login form submissions anywhere in the app
+  document.addEventListener("submit", (event) => {
+    if (event.target.matches("[data-form='login']")) {
+      handleLogin(event);
+    }
+  });
+
+  // Handle logout clicks anywhere in the app
+  document.addEventListener("click", (event) => {
+    if (event.target.matches("[data-action='logout']")) {
+      handleLogout(event);
+    }
+  });
 
   handleRouteChange();
 
@@ -51,6 +70,7 @@ window.onload = () => {
     handleErrorDialog(error);
   });
 };
+
 // TODO rm this backstop
 window.addEventListener("unhandledrejection", (event) => {
   console.error("Unhandled promise rejection:", event.reason);
