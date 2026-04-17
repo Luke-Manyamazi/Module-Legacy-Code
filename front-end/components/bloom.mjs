@@ -8,10 +8,12 @@
  * "sender": username,
  * "content": "string from textarea",
  * "sent_timestamp": "datetime as ISO 8601 formatted string"}
-
  */
 const createBloom = (template, bloom) => {
   if (!bloom) return;
+
+  const MAX_BLOOM_LENGTH = 280;
+
   const bloomFrag = document.getElementById(template).content.cloneNode(true);
   const bloomParser = new DOMParser();
 
@@ -21,14 +23,30 @@ const createBloom = (template, bloom) => {
   const bloomTimeLink = bloomFrag.querySelector("a:has(> [data-time])");
   const bloomContent = bloomFrag.querySelector("[data-content]");
 
+  const isTooLong = bloom.content && bloom.content.length > MAX_BLOOM_LENGTH;
+
+  // Highlight invalid blooms (UI only)
+  if (isTooLong) {
+    bloomArticle.style.border = "2px solid red";
+    bloomArticle.style.backgroundColor = "#fff5f5";
+    bloomArticle.title = "This bloom exceeds 280 characters (invalid)";
+  }
+
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
   bloomUsername.setAttribute("href", `/profile/${bloom.sender}`);
   bloomUsername.textContent = bloom.sender;
   bloomTime.textContent = _formatTimestamp(bloom.sent_timestamp);
   bloomTimeLink.setAttribute("href", `/bloom/${bloom.id}`);
+
+  const displayContent = isTooLong
+    ? `[INVALID BLOOM - exceeds 280 characters]\n\n${bloom.content}`
+    : bloom.content;
+
   bloomContent.replaceChildren(
-    ...bloomParser.parseFromString(_formatHashtags(bloom.content), "text/html")
-      .body.childNodes
+    ...bloomParser.parseFromString(
+      _formatHashtags(displayContent),
+      "text/html"
+    ).body.childNodes
   );
 
   return bloomFrag;
@@ -84,4 +102,4 @@ function _formatTimestamp(timestamp) {
   }
 }
 
-export {createBloom};
+export { createBloom };
