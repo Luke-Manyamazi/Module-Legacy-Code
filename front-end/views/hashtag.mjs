@@ -12,12 +12,18 @@ import {createLogout, handleLogout} from "../components/logout.mjs";
 import {createBloom} from "../components/bloom.mjs";
 import {createHeading} from "../components/heading.mjs";
 
-// Hashtag view: show all tweets containing this tag
-
+// Hashtag view: show all blooms containing this tag
 function hashtagView(hashtag) {
   destroy();
 
-  apiService.getBloomsByHashtag(hashtag);
+  const blooms = [];
+
+  // Only fetch if this hashtag isn't already loaded
+  if (state.currentHashtag !== `#${hashtag}`) {
+    apiService.getBloomsByHashtag(hashtag);
+  } else {
+    blooms.push(...(state.hashtagBlooms || []));
+  }
 
   renderOne(
     state.isLoggedIn,
@@ -28,6 +34,7 @@ function hashtagView(hashtag) {
   document
     .querySelector("[data-action='logout']")
     ?.addEventListener("click", handleLogout);
+
   renderOne(
     state.isLoggedIn,
     getLoginContainer(),
@@ -35,8 +42,8 @@ function hashtagView(hashtag) {
     createLogin
   );
   document
-    .querySelector("[data-action='login']")
-    ?.addEventListener("click", handleLogin);
+    .querySelector("[data-form='login']")
+    ?.addEventListener("submit", handleLogin);
 
   renderOne(
     state.currentHashtag,
@@ -44,12 +51,13 @@ function hashtagView(hashtag) {
     "heading-template",
     createHeading
   );
+
   renderEach(
-    state.hashtagBlooms || [],
+    blooms,
     getTimelineContainer(),
     "bloom-template",
     createBloom
   );
 }
 
-export {hashtagView};
+export {hashtagView };
