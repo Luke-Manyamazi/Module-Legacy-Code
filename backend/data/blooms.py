@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from data.connection import db_cursor
 from data.users import User
 
-
+MAX_BLOOM_LENGTH = 280
 @dataclass
 class Bloom:
     id: int
@@ -16,8 +16,8 @@ class Bloom:
 
 
 def add_bloom(*, sender: User, content: str) -> Bloom:
-    if len(content) > 280:
-        raise ValueError("Bloom must not exceed 280 characters")
+    if len(content) > MAX_BLOOM_LENGTH:
+        raise ValueError(f"Bloom must not exceed {MAX_BLOOM_LENGTH} characters")
 
     hashtags = [word[1:] for word in content.split(" ") if word.startswith("#")]
 
