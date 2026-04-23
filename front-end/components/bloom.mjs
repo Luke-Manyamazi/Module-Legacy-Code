@@ -17,9 +17,6 @@ const createBloom = (template, bloom) => {
   const bloomTime = bloomFrag.querySelector("[data-time]");
   const bloomTimeLink = bloomFrag.querySelector("a:has(> [data-time])");
   const bloomContent = bloomFrag.querySelector("[data-content]");
-  const rebloomButton = bloomFrag.querySelector("[data-action='rebloom']");
-  const rebloomCount = bloomFrag.querySelector("[data-rebloom-count]");
-  const rebloomLabel = bloomFrag.querySelector("[data-rebloom-label]");
 
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
   bloomUsername.setAttribute("href", `/profile/${bloom.sender}`);
@@ -31,29 +28,6 @@ const createBloom = (template, bloom) => {
     ...bloomParser.parseFromString(_formatHashtags(bloom.content), "text/html")
       .body.childNodes,
   );
-
-  // Handle rebloom click
-  rebloomButton?.addEventListener("click", async () => {
-    try {
-      const result = await apiService.rebloom(bloom.id);
-
-      if (result.success) {
-        rebloomButton.textContent = "🔁 Re-bloomed";
-        rebloomButton.disabled = true;
-
-        if (rebloomCount) {
-          const currentCount = bloom.rebloom_count || 0;
-          rebloomCount.textContent = `🔁 ${currentCount + 1}`;
-        }
-        if (bloom.rebloomed_by) {
-          rebloomLabel.textContent = `${bloom.rebloomed_by} re-bloomed`;
-        }
-      }
-    } catch (error) {
-      console.error("Failed to rebloom:", error);
-      alert("Failed to rebloom");
-    }
-  });
 
   return bloomFrag;
 };
