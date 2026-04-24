@@ -29,7 +29,7 @@ const createBloom = (template, bloom) => {
   if (isTooLong) {
     bloomArticle.style.border = "2px solid red";
     bloomArticle.style.backgroundColor = "#fff5f5";
-    bloomArticle.title = "This bloom exceeds 280 characters (invalid)";
+    bloomArticle.title = `This bloom exceeds ${MAX_BLOOM_LENGTH} characters (invalid)`;
   }
 
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
@@ -39,7 +39,7 @@ const createBloom = (template, bloom) => {
   bloomTimeLink.setAttribute("href", `/bloom/${bloom.id}`);
 
   const displayContent = isTooLong
-    ? `[INVALID BLOOM - exceeds 280 characters]\n\n${bloom.content}`
+    ? `[INVALID BLOOM - exceeds ${MAX_BLOOM_LENGTH} characters]\n\n${bloom.content}`
     : bloom.content;
 
   bloomContent.replaceChildren(

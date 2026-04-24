@@ -7,6 +7,7 @@ from data.connection import db_cursor
 from data.users import User
 
 MAX_BLOOM_LENGTH = 280
+
 @dataclass
 class Bloom:
     id: int
