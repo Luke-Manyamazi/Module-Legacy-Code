@@ -221,6 +221,23 @@ dialog {
   gap: var(--space);
 }
 
+/* BLOOM */
+.bloom--rebloom {
+  border-left: 4px solid var(--brand);
+}
+
+.bloom__rebloom-banner {
+  font-family: monospace;
+  font-size: 0.85em;
+  color: var(--accent);
+}
+
+.bloom__rebloom-button:disabled {
+  color: var(--brand);
+  border-color: var(--brand);
+  opacity: 1;
+}
+
 /* states, helpers*/
 .flex {
   display: flex;

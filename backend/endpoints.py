@@ -1,5 +1,6 @@
 from typing import Dict, Union
 from data import blooms
+from data.blooms import AlreadyRebloomedError
 from data.follows import follow, get_followed_usernames, get_inverse_followed_usernames
 from data.users import (
     UserRegistrationError,
@@ -110,7 +111,10 @@ def other_profile(profile_username):
     current_user = get_current_user()
 
     followers = get_inverse_followed_usernames(profile_user)
-    all_blooms = blooms.get_blooms_for_user(profile_username)
+    all_blooms = blooms.get_blooms_for_user(
+        profile_username,
+        current_user_id=current_user.id if current_user else None,
+    )
     all_blooms.reverse()
     return jsonify(
         {
@@ -158,7 +162,7 @@ def send_bloom():
 
     user = get_current_user()
 
-    blooms.add_bloom(sender=user, content=request.json["content"])
+    blooms.add_bloom(sender_id=user.id, content=request.json["content"])
 
     return jsonify(
         {
@@ -167,15 +171,59 @@ def send_bloom():
     )
 
 
+@jwt_required(optional=True)
 def get_bloom(id_str):
     try:
         id_int = int(id_str)
     except ValueError:
-        return make_response((f"Invalid bloom id", 400))
-    bloom = blooms.get_bloom(id_int)
+        return make_response(jsonify({"success": False, "message": "Invalid bloom id"}), 400)
+    current_user = get_current_user()
+    bloom = blooms.get_bloom(
+        id_int, current_user_id=current_user.id if current_user else None
+    )
     if bloom is None:
-        return make_response((f"Bloom not found", 404))
+        return make_response(jsonify({"success": False, "message": "Bloom not found"}), 404)
     return jsonify(bloom)
+
+
+@jwt_required()
+def do_rebloom(id_str):
+    try:
+        id_int = int(id_str)
+    except ValueError:
+        return make_response(jsonify({"success": False, "message": "Invalid bloom id"}), 400)
+
+    current_user = get_current_user()
+
+    target_bloom = blooms.get_bloom(id_int)
+    if target_bloom is None:
+        return make_response(jsonify({"success": False, "message": "Bloom not found"}), 404)
+
+    # Reblooming a rebloom points at its original, so reblooms never chain.
+    root_bloom_id = target_bloom.original_bloom_id or target_bloom.id
+
+    try:
+        blooms.add_rebloom(
+            sender_id=current_user.id,
+            original_bloom_id=root_bloom_id,
+            content=target_bloom.content,
+        )
+    except AlreadyRebloomedError:
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": "You have already reblооmed this bloom",
+                }
+            ),
+            409,
+        )
+
+    return jsonify(
+        {
+            "success": True,
+        }
+    )
 
 
 @jwt_required()
@@ -185,7 +233,9 @@ def home_timeline():
     # Get blooms from followed users
     followed_users = get_followed_usernames(current_user)
     nested_user_blooms = [
-        blooms.get_blooms_for_user(followed_user, limit=50)
+        blooms.get_blooms_for_user(
+            followed_user, current_user_id=current_user.id, limit=50
+        )
         for followed_user in followed_users
     ]
 
@@ -193,7 +243,9 @@ def home_timeline():
     followed_blooms = [bloom for blooms in nested_user_blooms for bloom in blooms]
 
     # Get the current user's own blooms
-    own_blooms = blooms.get_blooms_for_user(current_user.username, limit=50)
+    own_blooms = blooms.get_blooms_for_user(
+        current_user.username, current_user_id=current_user.id, limit=50
+    )
 
     # Combine own blooms with followed blooms
     all_blooms = followed_blooms + own_blooms
@@ -206,8 +258,13 @@ def home_timeline():
     return jsonify(sorted_blooms)
 
 
+@jwt_required(optional=True)
 def user_blooms(profile_username):
-    user_blooms = blooms.get_blooms_for_user(profile_username)
+    current_user = get_current_user()
+    user_blooms = blooms.get_blooms_for_user(
+        profile_username,
+        current_user_id=current_user.id if current_user else None,
+    )
     user_blooms.reverse()
     return jsonify(user_blooms)
 
@@ -228,8 +285,14 @@ def suggested_follows(limit_str):
     return jsonify(suggestions)
 
 
+@jwt_required(optional=True)
 def hashtag(hashtag):
-    return jsonify(blooms.get_blooms_with_hashtag(hashtag))
+    current_user = get_current_user()
+    return jsonify(
+        blooms.get_blooms_with_hashtag(
+            hashtag, current_user_id=current_user.id if current_user else None
+        )
+    )
 
 
 def verify_request_fields(names_to_types: Dict[str, type]) -> Union[Response, None]:

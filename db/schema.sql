@@ -10,8 +10,12 @@ CREATE TABLE blooms (
     id BIGSERIAL NOT NULL PRIMARY KEY,
     sender_id INT NOT NULL REFERENCES users(id),
     content TEXT NOT NULL,
-    send_timestamp TIMESTAMP NOT NULL
+    send_timestamp TIMESTAMP NOT NULL,
+    original_bloom_id BIGINT REFERENCES blooms(id)
 );
+
+CREATE UNIQUE INDEX reblooms_unique_per_user ON blooms (sender_id, original_bloom_id)
+    WHERE original_bloom_id IS NOT NULL;
 
 CREATE TABLE follows (
     id SERIAL PRIMARY KEY,

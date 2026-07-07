@@ -4,6 +4,7 @@ from custom_json_provider import CustomJsonProvider
 from data.users import lookup_user
 from endpoints import (
     do_follow,
+    do_rebloom,
     get_bloom,
     hashtag,
     home_timeline,
@@ -17,9 +18,10 @@ from endpoints import (
 )
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from werkzeug.exceptions import HTTPException
 
 
 def main():
@@ -46,6 +48,17 @@ def main():
     jwt = JWTManager(app)
     jwt.user_lookup_loader(lookup_user)
 
+    # Force JSON error bodies everywhere - Flask's default HTML error pages
+    # break frontend code that expects response.json() to succeed.
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        return jsonify({"success": False, "message": error.description}), error.code
+
+    @app.errorhandler(Exception)
+    def handle_unexpected_exception(error):
+        app.logger.exception(error)
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
     app.add_url_rule("/register", methods=["POST"], view_func=register)
     app.add_url_rule("/login", methods=["POST"], view_func=login)
 
@@ -58,6 +71,7 @@ def main():
 
     app.add_url_rule("/bloom", methods=["POST"], view_func=send_bloom)
     app.add_url_rule("/bloom/<id_str>", methods=["GET"], view_func=get_bloom)
+    app.add_url_rule("/bloom/<id_str>/rebloom", methods=["POST"], view_func=do_rebloom)
     app.add_url_rule("/blooms/<profile_username>", view_func=user_blooms)
     app.add_url_rule("/hashtag/<hashtag>", view_func=hashtag)
 

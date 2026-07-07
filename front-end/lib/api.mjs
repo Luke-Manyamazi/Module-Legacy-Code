@@ -212,6 +212,24 @@ async function postBloom(content) {
   }
 }
 
+async function rebloomBloom(bloomId) {
+  try {
+    const data = await _apiRequest(`/bloom/${bloomId}/rebloom`, {
+      method: "POST",
+    });
+
+    if (data.success) {
+      await getBlooms();
+      await getProfile(state.currentUser);
+    }
+
+    return data;
+  } catch (error) {
+    // Error already handled by _apiRequest
+    return {success: false};
+  }
+}
+
 // ======= USER methods
 async function getProfile(username) {
   const endpoint = username ? `/profile/${username}` : "/profile";
@@ -291,6 +309,7 @@ const apiService = {
   getBloom,
   getBlooms,
   postBloom,
+  rebloomBloom,
   getBloomsByHashtag,
 
   // User methods

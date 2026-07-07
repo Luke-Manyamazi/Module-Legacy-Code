@@ -234,11 +234,26 @@
     <!-- Bloom Template -->
     <template id="bloom-template">
       <article class="bloom box" data-bloom data-bloom-id="">
+        <div class="bloom__rebloom-banner" data-rebloom-banner hidden>
+          🔁 Reblооmed by
+          <a href="#" class="bloom__rebloomer" data-rebloomer>Username</a>
+          <time class="bloom__rebloom-time" data-rebloom-time></time>
+        </div>
         <div class="bloom__header flex">
           <a href="#" class="bloom__username" data-username>Username</a>
           <a href="#" class="bloom__time"><time class="bloom__time" data-time>2m</time></a>
         </div>
         <div class="bloom__content" data-content></div>
+        <div class="bloom__footer flex">
+          <button
+            type="button"
+            class="bloom__rebloom-button"
+            data-action="rebloom"
+          >
+            🔁 <span data-rebloom-label>Rebloom</span>
+            <span class="bloom__rebloom-count" data-rebloom-count hidden></span>
+          </button>
+        </div>
       </article>
     </template>
 

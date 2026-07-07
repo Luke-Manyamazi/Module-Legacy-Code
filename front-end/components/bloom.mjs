@@ -1,3 +1,5 @@
+import {apiService} from "../index.mjs";
+
 /**
  * Create a bloom component
  * @param {string} template - The ID of the template to clone
@@ -7,7 +9,12 @@
  * {"id": Number,
  * "sender": username,
  * "content": "string from textarea",
- * "sent_timestamp": "datetime as ISO 8601 formatted string"}
+ * "sent_timestamp": "datetime as ISO 8601 formatted string",
+ * "original_bloom_id": Number or null,
+ * "original_sender": username or null - set when this bloom is a rebloom,
+ * "original_sent_timestamp": "datetime as ISO 8601 formatted string" or null,
+ * "rebloom_count": Number,
+ * "rebloomed_by_current_user": boolean}
 
  */
 const createBloom = (template, bloom) => {
@@ -20,19 +27,64 @@ const createBloom = (template, bloom) => {
   const bloomTime = bloomFrag.querySelector("[data-time]");
   const bloomTimeLink = bloomFrag.querySelector("a:has(> [data-time])");
   const bloomContent = bloomFrag.querySelector("[data-content]");
+  const rebloomBanner = bloomFrag.querySelector("[data-rebloom-banner]");
+  const rebloomer = bloomFrag.querySelector("[data-rebloomer]");
+  const rebloomTime = bloomFrag.querySelector("[data-rebloom-time]");
+  const rebloomButton = bloomFrag.querySelector("[data-action='rebloom']");
+  const rebloomLabel = bloomFrag.querySelector("[data-rebloom-label]");
+  const rebloomCount = bloomFrag.querySelector("[data-rebloom-count]");
+
+  const isRebloom = Boolean(bloom.original_sender);
+  const bylineUsername = isRebloom ? bloom.original_sender : bloom.sender;
 
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
-  bloomUsername.setAttribute("href", `/profile/${bloom.sender}`);
-  bloomUsername.textContent = bloom.sender;
-  bloomTime.textContent = _formatTimestamp(bloom.sent_timestamp);
+  bloomArticle.classList.toggle("bloom--rebloom", isRebloom);
+  bloomUsername.setAttribute("href", `/profile/${bylineUsername}`);
+  bloomUsername.textContent = bylineUsername;
+  bloomTime.textContent = _formatTimestamp(
+    bloom.original_sent_timestamp ?? bloom.sent_timestamp
+  );
   bloomTimeLink.setAttribute("href", `/bloom/${bloom.id}`);
   bloomContent.replaceChildren(
     ...bloomParser.parseFromString(_formatHashtags(bloom.content), "text/html")
       .body.childNodes
   );
 
+  rebloomBanner.hidden = !isRebloom;
+  if (isRebloom) {
+    rebloomer.setAttribute("href", `/profile/${bloom.sender}`);
+    rebloomer.textContent = bloom.sender;
+    rebloomTime.textContent = _formatTimestamp(bloom.sent_timestamp);
+  }
+
+  rebloomButton.setAttribute("data-bloom-id", bloom.id);
+  rebloomButton.disabled = Boolean(bloom.rebloomed_by_current_user);
+  rebloomLabel.textContent = bloom.rebloomed_by_current_user
+    ? "Reblооmed"
+    : "Rebloom";
+  rebloomCount.hidden = !bloom.rebloom_count;
+  rebloomCount.textContent = bloom.rebloom_count || "";
+
   return bloomFrag;
 };
+
+/**
+ * Handle a rebloom button click
+ * @param {Event} event - The click event from a bloom's rebloom button
+ */
+async function handleRebloom(event) {
+  const button = event.currentTarget;
+  const bloomId = button.getAttribute("data-bloom-id");
+  if (!bloomId) return;
+
+  button.disabled = true;
+  const data = await apiService.rebloomBloom(bloomId);
+  if (!data.success) {
+    // A successful rebloom triggers a re-render (via getBlooms/getProfile)
+    // which replaces this button entirely, so only re-enable on failure.
+    button.disabled = false;
+  }
+}
 
 function _formatHashtags(text) {
   if (!text) return text;
@@ -84,4 +136,4 @@ function _formatTimestamp(timestamp) {
   }
 }
 
-export {createBloom};
+export {createBloom, handleRebloom};
