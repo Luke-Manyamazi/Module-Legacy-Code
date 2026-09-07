@@ -76,6 +76,7 @@ def main():
     follow(follower_access_token=sample_access_token, follow_username="TechInfluencer")
     follow(follower_access_token=sample_access_token, follow_username="Swiz")
     follow(follower_access_token=sample_access_token, follow_username="AS")
+    follow(follower_access_token=sample_access_token, follow_username="JustSomeGuy")
     follow(follower_access_token=musician_access_token, follow_username="sample")
 
 

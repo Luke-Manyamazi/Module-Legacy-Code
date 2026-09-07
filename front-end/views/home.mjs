@@ -19,6 +19,8 @@ import {createBloom, handleRebloom} from "../components/bloom.mjs";
 
 // Home view - logged in or not
 function homeView() {
+  if (window.__purpleForestRoute && window.__purpleForestRoute !== "home") return;
+  if (window.location.hash && window.location.hash !== "#/") return;
   destroy();
 
   if (state.isLoggedIn) {

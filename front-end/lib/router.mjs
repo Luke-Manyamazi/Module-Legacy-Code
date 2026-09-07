@@ -14,6 +14,7 @@ function handleRouteChange() {
 
   // Bloom path for a single bloom
   if (hash.startsWith("/bloom/")) {
+    window.__purpleForestRoute = "bloom";
     const bloomId = hash.split("/")[2];
     bloomView(bloomId);
     return;
@@ -21,6 +22,7 @@ function handleRouteChange() {
 
   // Profile path with username
   if (hash.startsWith("/profile/")) {
+    window.__purpleForestRoute = "profile";
     const username = hash.split("/")[2];
     profileView(username);
     return;
@@ -28,6 +30,7 @@ function handleRouteChange() {
 
   // Hashtag path
   if (hash.startsWith("/hashtag/")) {
+    window.__purpleForestRoute = "hashtag";
     const hashtag = hash.split("/")[2];
     hashtagView(hashtag);
     return;
@@ -35,16 +38,19 @@ function handleRouteChange() {
 
   // Static routes
   if (hash === "/signup") {
+    window.__purpleForestRoute = "signup";
     signupView();
     return;
   }
 
   if (hash === "/login") {
+    window.__purpleForestRoute = "login";
     loginView();
     return;
   }
 
   // Default route
+  window.__purpleForestRoute = "home";
   homeView();
 }
 

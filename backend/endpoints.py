@@ -200,7 +200,11 @@ def do_rebloom(id_str):
         return make_response(jsonify({"success": False, "message": "Bloom not found"}), 404)
 
     # Reblooming a rebloom points at its original, so reblooms never chain.
-    root_bloom_id = target_bloom.original_bloom_id or target_bloom.id
+    root_bloom_id = (
+        target_bloom.rebloom_details.id
+        if target_bloom.rebloom_details
+        else target_bloom.id
+    )
 
     try:
         blooms.add_rebloom(

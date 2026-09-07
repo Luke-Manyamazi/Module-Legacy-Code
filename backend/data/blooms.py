@@ -14,14 +14,19 @@ class AlreadyRebloomedError(Exception):
 
 
 @dataclass
+class RebloomDetails:
+    id: int
+    sender: str
+    sent_timestamp: datetime.datetime
+
+
+@dataclass
 class Bloom:
     id: int
     sender: User
     content: str
     sent_timestamp: datetime.datetime
-    original_bloom_id: Optional[int] = None
-    original_sender: Optional[str] = None
-    original_sent_timestamp: Optional[datetime.datetime] = None
+    rebloom_details: Optional[RebloomDetails] = None
     rebloom_count: int = 0
     rebloomed_by_current_user: bool = False
 
@@ -31,12 +36,12 @@ class Bloom:
 # a separate table or a stored counter.
 _SELECT_FIELDS = """
               b.id, u.username, b.content, b.send_timestamp,
-              b.original_bloom_id, orig_user.username, orig.send_timestamp,
+              orig.id, orig_user.username, orig.send_timestamp,
               (
                 SELECT COUNT(*) FROM blooms rb
                 WHERE rb.original_bloom_id = COALESCE(b.original_bloom_id, b.id)
               ),
-              EXISTS(
+                %(current_user_id)s IS NOT NULL AND EXISTS(
                 SELECT 1 FROM blooms rb2
                 WHERE rb2.sender_id = %(current_user_id)s
                   AND rb2.original_bloom_id = COALESCE(b.original_bloom_id, b.id)
@@ -63,14 +68,19 @@ def _bloom_from_row(row) -> Bloom:
         rebloom_count,
         rebloomed_by_current_user,
     ) = row
+    rebloom_details = None
+    if original_bloom_id is not None:
+        rebloom_details = RebloomDetails(
+            id=original_bloom_id,
+            sender=original_sender,
+            sent_timestamp=original_sent_timestamp,
+        )
     return Bloom(
         id=bloom_id,
         sender=sender_username,
         content=content,
         sent_timestamp=timestamp,
-        original_bloom_id=original_bloom_id,
-        original_sender=original_sender,
-        original_sent_timestamp=original_sent_timestamp,
+        rebloom_details=rebloom_details,
         rebloom_count=rebloom_count,
         rebloomed_by_current_user=rebloomed_by_current_user,
     )

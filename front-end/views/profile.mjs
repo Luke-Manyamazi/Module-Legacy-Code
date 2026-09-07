@@ -1,4 +1,15 @@
-import {apiService} from "../index.mjs";
+import {
+  apiService,
+  getLogoutContainer,
+  getTimelineContainer,
+} from "../index.mjs";
+import {state} from "../lib/state.mjs";
+import {destroy, renderEach, renderOne} from "../lib/render.mjs";
+import {getProfileContainer} from "../index.mjs";
+import {createLogout, handleLogout} from "../components/logout.mjs";
+import {createBloom, handleRebloom} from "../components/bloom.mjs";
+
+let profileViewLoading = false;
 
 /**
  * Create a profile component
@@ -66,4 +77,48 @@ async function handleFollow(event) {
   await apiService.getWhoToFollow();
 }
 
-export {createProfile, handleFollow};
+async function profileView(username) {
+  if (profileViewLoading) return;
+  profileViewLoading = true;
+  destroy();
+  try {
+    await apiService.getProfile(username);
+    const blooms = await apiService.getBlooms(username);
+    const profileData = state.profiles.find((profile) => profile.username === username);
+    destroy();
+    renderOne(
+      state.isLoggedIn,
+      getLogoutContainer(),
+      "logout-template",
+      createLogout
+    );
+    document
+      .querySelector("[data-action='logout']")
+      ?.addEventListener("click", handleLogout);
+    renderOne(
+      {
+        profileData,
+        whoToFollow: [],
+        isLoggedIn: state.isLoggedIn,
+      },
+      getProfileContainer(),
+      "profile-template",
+      createProfile
+    );
+    renderEach(
+      blooms.filter(
+        (bloom) => bloom.sender === username && !bloom.rebloom_details
+      ),
+      getTimelineContainer(),
+      "bloom-template",
+      createBloom
+    );
+    document
+      .querySelectorAll("[data-action='rebloom']")
+      .forEach((button) => button.addEventListener("click", handleRebloom));
+  } finally {
+    profileViewLoading = false;
+  }
+}
+
+export {createProfile, handleFollow, profileView};
