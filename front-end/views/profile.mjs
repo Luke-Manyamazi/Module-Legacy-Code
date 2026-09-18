@@ -106,9 +106,7 @@ async function profileView(username) {
       createProfile
     );
     renderEach(
-      blooms.filter(
-        (bloom) => bloom.sender === username && !bloom.rebloom_details
-      ),
+      blooms,
       getTimelineContainer(),
       "bloom-template",
       createBloom

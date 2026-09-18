@@ -201,8 +201,8 @@ def do_rebloom(id_str):
 
     # Reblooming a rebloom points at its original, so reblooms never chain.
     root_bloom_id = (
-        target_bloom.rebloom_details.id
-        if target_bloom.rebloom_details
+        target_bloom.original_bloom.id
+        if target_bloom.original_bloom
         else target_bloom.id
     )
 

@@ -14,7 +14,7 @@ class AlreadyRebloomedError(Exception):
 
 
 @dataclass
-class RebloomDetails:
+class OriginalBloom:
     id: int
     sender: str
     sent_timestamp: datetime.datetime
@@ -26,7 +26,7 @@ class Bloom:
     sender: User
     content: str
     sent_timestamp: datetime.datetime
-    rebloom_details: Optional[RebloomDetails] = None
+    original_bloom: Optional[OriginalBloom] = None
     rebloom_count: int = 0
     rebloomed_by_current_user: bool = False
 
@@ -68,9 +68,9 @@ def _bloom_from_row(row) -> Bloom:
         rebloom_count,
         rebloomed_by_current_user,
     ) = row
-    rebloom_details = None
+    original_bloom = None
     if original_bloom_id is not None:
-        rebloom_details = RebloomDetails(
+        original_bloom = OriginalBloom(
             id=original_bloom_id,
             sender=original_sender,
             sent_timestamp=original_sent_timestamp,
@@ -80,7 +80,7 @@ def _bloom_from_row(row) -> Bloom:
         sender=sender_username,
         content=content,
         sent_timestamp=timestamp,
-        rebloom_details=rebloom_details,
+        original_bloom=original_bloom,
         rebloom_count=rebloom_count,
         rebloomed_by_current_user=rebloomed_by_current_user,
     )

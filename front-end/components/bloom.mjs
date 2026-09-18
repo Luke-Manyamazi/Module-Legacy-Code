@@ -10,7 +10,7 @@ import {apiService} from "../index.mjs";
  * "sender": username,
  * "content": "string from textarea",
  * "sent_timestamp": "datetime as ISO 8601 formatted string",
- * "rebloom_details": object or null - the original bloom when this is a rebloom,
+ * "original_bloom": object or null - the original bloom when this is a rebloom,
  * "rebloom_count": Number,
  * "rebloomed_by_current_user": boolean}
 
@@ -32,15 +32,15 @@ const createBloom = (template, bloom) => {
   const rebloomLabel = bloomFrag.querySelector("[data-rebloom-label]");
   const rebloomCount = bloomFrag.querySelector("[data-rebloom-count]");
 
-  const isRebloom = Boolean(bloom.rebloom_details);
-  const bylineUsername = isRebloom ? bloom.rebloom_details.sender : bloom.sender;
+  const isRebloom = Boolean(bloom.original_bloom);
+  const bylineUsername = isRebloom ? bloom.original_bloom.sender : bloom.sender;
 
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
   bloomArticle.classList.toggle("bloom--rebloom", isRebloom);
   bloomUsername.setAttribute("href", `/profile/${bylineUsername}`);
   bloomUsername.textContent = bylineUsername;
   bloomTime.textContent = _formatTimestamp(
-    bloom.rebloom_details?.sent_timestamp ?? bloom.sent_timestamp
+    bloom.original_bloom?.sent_timestamp ?? bloom.sent_timestamp
   );
   bloomTimeLink.setAttribute("href", `/bloom/${bloom.id}`);
   bloomContent.replaceChildren(
